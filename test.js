@@ -10,7 +10,7 @@ async function connectDB(){
     user          : "ljw",
     password      : "123123",
     connectString : "xe"
-});
+    });
 }
 
 
