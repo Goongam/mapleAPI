@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "easy-soap-request": "^4.7.0",
+    "oracledb": "^5.4.0",
     "request": "^2.88.2",
     "xml-js": "^1.6.11"
   }

@@ -1,6 +1,47 @@
 const soapRequest = require("easy-soap-request");
 const convert = require('xml-js');
 const fs = require('fs');
+const oracledb = require('oracledb');
+
+let connection;
+async function connectDB(){
+    oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
+    connection = await oracledb.getConnection({
+    user          : "ljw",
+    password      : "123123",
+    connectString : "xe"
+});
+}
+
+
+async function insertData(id, nickname){
+    try {
+        
+        const testre = await connection.execute("insert into MapleIdList values(:id, :nickname)",[id,nickname]);
+        // const result = await connection.execute('select * from MapleIdList');
+        connection.commit();
+        console.log(`입력: ${id} / ${nickname}`);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+async function insertError(id){
+    try {
+        await connection.execute("insert into ErrorIDList values(:id)",id);
+        console.log("에러ID:",id);
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+const sleep = (ms) => {
+    return new Promise(resolve=>{
+        setTimeout(resolve,ms)
+    })
+}
+
 
 // let xml = 
 // `<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
@@ -47,8 +88,7 @@ const getData = async (callback, id)=>{
         callback(xmlToJson,id);
         
     } catch (error) {
-        console.log("ErrorID:"+id);
-        //console.log(error);
+        insertError(id);
     }
 }
 
@@ -59,19 +99,15 @@ const getData = async (callback, id)=>{
 // });
 
 const print = async ()=>{
-    for(id = 2000000; id <= 5000000; id++){
+    for(id = 50001; id <= 52000; id++){
         getData( (XML, id) => {
             const body = JSON.parse(XML);
             const data = body['soap:Envelope']['soap:Body']['GetCharacterInfoByAccountIDResponse']['GetCharacterInfoByAccountIDResult']['diffgr:diffgram']['NewDataSet']['UserInfo'];
+            // console.log(data);
             if(data['Lev']['_text'] != "0"){
-                if(data['CharacterName']['_text'] == "맛있는바지")
-                {
-                    console.log("ID="+id);
-                    console.log(data['CharacterName']);
-                    console.log("\n");
-                }
+                // console.log(data['CharacterName']['_text']);
+                insertData(id, data['CharacterName']['_text']);
             }
-            
         },id);
         await sleep(2);
     }
@@ -86,10 +122,9 @@ const print = async ()=>{
 
 
 
- const sleep = (ms) => {
-     return new Promise(resolve=>{
-         setTimeout(resolve,ms)
-     })
- }
 
- print();
+//  print();
+
+connectDB();
+
+print();
